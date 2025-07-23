@@ -21,15 +21,18 @@ function UserReport({ user }) {
       setLoading(true);
       setError("");
       try {
-        const { data, error } = await supabase
-          .from("reports")
-          .select("report")
-          .eq("user_id", user.id)
-          .single({
-            headers: { Accept: "application/json" }
-          });
-        if (error) throw error;
-        setReport(data?.report || null);
+        // Use fetch to add Accept header for Supabase REST endpoint
+        const url = `${process.env.REACT_APP_SUPABASE_URL}/rest/v1/reports?select=report&user_id=eq.${user.id}`;
+        const response = await fetch(url, {
+          headers: {
+            'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}`,
+            'Accept': 'application/json'
+          }
+        });
+        if (!response.ok) throw new Error('Could not load your report. Please try again later.');
+        const data = await response.json();
+        setReport(data && data[0]?.report ? data[0].report : null);
       } catch (err) {
         setError("Could not load your report. Please try again later.");
         setReport(null);
@@ -51,7 +54,12 @@ function UserReport({ user }) {
           {error}
         </Alert>
       ) : report ? (
-        <Text whiteSpace="pre-wrap">{report}</Text>
+        <Box>
+          <Text mb={2}>Your uploaded report:</Text>
+          <a href={report} target="_blank" rel="noopener noreferrer" style={{ color: '#3182ce', textDecoration: 'underline' }}>
+            View / Download Report
+          </a>
+        </Box>
       ) : (
         <Text>No report found.</Text>
       )}

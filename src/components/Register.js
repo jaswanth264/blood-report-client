@@ -1,6 +1,7 @@
 // /src/components/Register.js
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -14,10 +15,10 @@ import {
 import { supabase } from "../supabaseClient";
 
 
-function Register() {
   const [form, setForm] = useState({ name: "", age: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const navigate = useNavigate();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -40,10 +41,12 @@ function Register() {
       toast({
         title: "Registered successfully. Please check your email to verify.",
         status: "success",
-        duration: 3000,
+        duration: 2000,
         isClosable: true,
       });
-      setForm({ name: "", age: "", email: "", password: "" });
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       toast({
         title: err.message || "Registration failed",

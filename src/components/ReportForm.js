@@ -14,7 +14,7 @@ import { supabase } from "../supabaseClient";
 
 // ...existing code...
 function ReportForm({ user }) {
-  const [report, setReport] = useState("");
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
 
@@ -22,27 +22,31 @@ function ReportForm({ user }) {
     e.preventDefault();
     setLoading(true);
     try {
-      // Upsert report for the user in Supabase (fix: remove invalid columns param, add Accept header)
+      if (!file) throw new Error("Please select a file to upload.");
+      // Upload file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+      let { error: uploadError } = await supabase.storage.from('reports').upload(filePath, file);
+      if (uploadError) throw uploadError;
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage.from('reports').getPublicUrl(filePath);
+      // Upsert file URL in reports table
       const { error } = await supabase
         .from("reports")
         .upsert([
-          { user_id: user.id, report }
-        ], { onConflict: ["user_id"] })
-        .select()
-        .single({
-          headers: { Accept: "application/json" }
-        });
+          { user_id: user.id, report: publicUrl }
+        ], { onConflict: ["user_id"] });
       if (error) throw error;
       toast({
-        title: "Report Submitted",
+        title: "Report Uploaded",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      setReport("");
+      setFile(null);
     } catch (err) {
       toast({
-        title: "Submission failed",
+        title: "Upload failed",
         description: err.message || "Try again",
         status: "error",
         duration: 3000,
@@ -55,20 +59,20 @@ function ReportForm({ user }) {
 
   return (
     <Box mb={6}>
-      <Heading size="md" mb={4}>Submit Blood Report</Heading>
+      <Heading size="md" mb={4}>Upload Blood Report</Heading>
       <form onSubmit={handleSubmit}>
         <VStack spacing={4} align="stretch">
           <FormControl isRequired>
-            <FormLabel>Report Details</FormLabel>
-            <Textarea
-              placeholder="Paste your report here"
-              value={report}
-              onChange={(e) => setReport(e.target.value)}
-              isDisabled={loading}
+            <FormLabel>Report File (PDF, Image, etc.)</FormLabel>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.txt"
+              onChange={e => setFile(e.target.files[0])}
+              disabled={loading}
             />
           </FormControl>
           <Button type="submit" colorScheme="teal" isLoading={loading} isDisabled={loading}>
-            Submit
+            Upload
           </Button>
         </VStack>
       </form>
