@@ -1,112 +1,70 @@
-// /src/App.js
-import React, { useState } from "react";
-import {
-  Box,
-  Button,
-  Flex,
-  Heading,
-  Spacer,
-  useToast,
-} from "@chakra-ui/react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
-
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Register from "./components/Register";
 import Login from "./components/Login";
 import ReportForm from "./components/ReportForm";
 import UserReport from "./components/UserReport";
 import AdminDashboard from "./components/AdminDashboard";
-
-function Navbar({ user, onLogout }) {
-  const navigate = useNavigate();
-
-  return (
-    <Flex p={4} bg="teal.500" color="white" alignItems="center">
-      <Heading size="md" cursor="pointer" onClick={() => navigate("/")}>
-        Blood Report App
-      </Heading>
-      <Spacer />
-      {user && (
-        <>
-          <Button variant="link" color="white" onClick={() => navigate("/admin")}>
-            Admin
-          </Button>
-          <Button ml={4} variant="outline" color="white" onClick={onLogout}>
-            Logout
-          </Button>
-        </>
-      )}
-    </Flex>
-  );
-}
-
-function AppRoutes({ user, setUser }) {
-  const toast = useToast();
-  const navigate = useNavigate();
-
-  const handleLogin = (data) => {
-    setUser(data);
-    localStorage.setItem("user", JSON.stringify(data));
-    toast({
-      title: "Login successful!",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    navigate("/");
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    toast({
-      title: "Logged out.",
-      status: "info",
-      duration: 2000,
-      isClosable: true,
-    });
-    navigate("/login");
-  };
-
-  return (
-    <>
-      <Navbar user={user} onLogout={handleLogout} />
-      <Box maxW="600px" mx="auto" my={6} p={4}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              user ? (
-                <>
-                  <ReportForm user={user} />
-                  <UserReport user={user} />
-                </>
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/admin"
-            element={
-              user ? <AdminDashboard /> : <Navigate to="/login" />
-            }
-          />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Box>
-    </>
-  );
-}
+import { ChakraProvider, Box, Button, VStack } from "@chakra-ui/react";
+import { supabase } from "./supabaseClient";
 
 function App() {
-  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user")));
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setLoading(false);
+    };
+    getSession();
+    const { subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Example admin check (replace with your admin email or role logic)
+  const isAdmin = session?.user?.email === "admin@example.com";
+
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <Router>
-      <AppRoutes user={user} setUser={setUser} />
-    </Router>
+    <ChakraProvider>
+      <Router>
+        <Box maxW="md" mx="auto" mt={10} p={6} borderWidth="1px" borderRadius="md" boxShadow="md">
+          {session && (
+            <VStack mb={4} align="stretch">
+              <Button colorScheme="red" onClick={() => supabase.auth.signOut()}>
+                Sign Out
+              </Button>
+            </VStack>
+          )}
+          <Routes>
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login onLogin={setSession} />} />
+            <Route
+              path="/admin"
+              element={isAdmin ? <AdminDashboard /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/"
+              element={
+                session ? (
+                  <>
+                    <ReportForm user={session.user} />
+                    <UserReport user={session.user} />
+                  </>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+          </Routes>
+        </Box>
+      </Router>
+    </ChakraProvider>
   );
 }
 

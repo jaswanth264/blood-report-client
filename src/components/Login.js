@@ -12,24 +12,29 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+
+import { supabase } from "../supabaseClient";
 
 function Login({ onLogin }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const toast = useToast();
 
+
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("/api/login", form);
-      onLogin(res.data);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password
+      });
+      if (error) throw error;
+      onLogin(data.session?.user || data.user); // Pass user/session to parent
     } catch (err) {
       toast({
         title: "Login failed",
-        description: err.response?.data?.message || "Invalid credentials",
+        description: err.message || "Invalid credentials",
         status: "error",
         duration: 3000,
         isClosable: true,

@@ -6,15 +6,22 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import axios from "axios";
+import { supabase } from "../supabaseClient";
 
 function AdminDashboard() {
   const [reports, setReports] = useState([]);
 
   useEffect(() => {
     async function fetchReports() {
-      const res = await axios.get("/api/admin/reports");
-      setReports(res.data);
+      const { data, error } = await supabase
+        .from("reports")
+        .select("report, user_id")
+        .order("inserted_at", { ascending: false });
+      if (error) {
+        setReports([]);
+      } else {
+        setReports(data || []);
+      }
     }
     fetchReports();
   }, []);
@@ -25,7 +32,7 @@ function AdminDashboard() {
       <VStack spacing={4} align="stretch">
         {reports.map((r, i) => (
           <Box key={i} p={4} borderWidth="1px" borderRadius="md">
-            <Text fontWeight="bold">{r.email}</Text>
+            <Text fontWeight="bold">User ID: {r.user_id}</Text>
             <Text whiteSpace="pre-wrap">{r.report}</Text>
           </Box>
         ))}

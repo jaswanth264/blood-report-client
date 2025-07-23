@@ -10,8 +10,9 @@ import {
   Heading,
   useToast,
 } from "@chakra-ui/react";
-import axios from "axios";
+import { supabase } from "../supabaseClient";
 
+// ...existing code...
 function ReportForm({ user }) {
   const [report, setReport] = useState("");
   const toast = useToast();
@@ -19,10 +20,13 @@ function ReportForm({ user }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/report", {
-        email: user.email,
-        report,
-      });
+      // Upsert report for the user in Supabase
+      const { error } = await supabase
+        .from("reports")
+        .upsert([
+          { user_id: user.id, report }
+        ], { onConflict: ["user_id"] });
+      if (error) throw error;
       toast({
         title: "Report Submitted",
         status: "success",
@@ -33,7 +37,7 @@ function ReportForm({ user }) {
     } catch (err) {
       toast({
         title: "Submission failed",
-        description: err?.response?.data?.message || "Try again",
+        description: err.message || "Try again",
         status: "error",
         duration: 3000,
         isClosable: true,

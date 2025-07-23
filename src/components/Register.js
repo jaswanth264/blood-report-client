@@ -11,22 +11,34 @@ import {
   VStack,
   useToast,
 } from "@chakra-ui/react";
-import axios from "axios";
+
 import { Link } from "react-router-dom";
+import { supabase } from "../supabaseClient";
 
 function Register() {
   const [form, setForm] = useState({ name: "", age: "", email: "", password: "" });
   const toast = useToast();
 
+
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/register", form);
+      // Sign up user with Supabase Auth
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            name: form.name,
+            age: parseInt(form.age, 10)
+          }
+        }
+      });
+      if (error) throw error;
       toast({
-        title: "Registered successfully",
+        title: "Registered successfully. Please check your email to verify.",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -34,7 +46,7 @@ function Register() {
       setForm({ name: "", age: "", email: "", password: "" });
     } catch (err) {
       toast({
-        title: err.response?.data?.message || "Registration failed",
+        title: err.message || "Registration failed",
         status: "error",
         duration: 3000,
         isClosable: true,

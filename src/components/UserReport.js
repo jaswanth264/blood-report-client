@@ -5,7 +5,7 @@ import {
   Text,
   Heading,
 } from "@chakra-ui/react";
-import axios from "axios";
+import { supabase } from "../supabaseClient";
 
 function UserReport({ user }) {
   const [report, setReport] = useState(null);
@@ -13,15 +13,17 @@ function UserReport({ user }) {
   useEffect(() => {
     async function getReport() {
       try {
-        const res = await axios.get("/api/report", {
-          params: { email: user.email },
-        });
-        setReport(res.data.report);
+        const { data, error } = await supabase
+          .from("reports")
+          .select("report")
+          .eq("user_id", user.id)
+          .single();
+        if (error) throw error;
+        setReport(data?.report || null);
       } catch (err) {
         setReport(null);
       }
     }
-
     getReport();
   }, [user]);
 
