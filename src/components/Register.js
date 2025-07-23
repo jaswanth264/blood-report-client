@@ -1,4 +1,5 @@
 // /src/components/Register.js
+
 import React, { useState } from "react";
 import {
   Box,
@@ -7,21 +8,12 @@ import {
   FormLabel,
   Heading,
   Input,
-  Text,
   VStack,
   useToast,
 } from "@chakra-ui/react";
-
-import { Link } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
-function Register() {
-  const [form, setForm] = useState({ name: "", age: "", email: "", password: "" });
-  const toast = useToast();
 
-
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
 function Register() {
   const [form, setForm] = useState({ name: "", age: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -94,6 +86,6 @@ function Register() {
   );
 }
 
-}
+export default Register;
 
 export default Register;
