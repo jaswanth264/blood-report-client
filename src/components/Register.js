@@ -15,6 +15,8 @@ import {
 import { supabase } from "../supabaseClient";
 
 
+
+function Register() {
   const [form, setForm] = useState({ name: "", age: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const toast = useToast();
