@@ -9,7 +9,7 @@ import {
   Alert,
   AlertIcon,
 } from "@chakra-ui/react";
-import { supabase } from "../supabaseClient";
+
 
 function UserReport({ user }) {
   const [report, setReport] = useState(null);
