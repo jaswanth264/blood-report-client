@@ -22,8 +22,16 @@ function Register() {
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
+function Register() {
+  const [form, setForm] = useState({ name: "", age: "", email: "", password: "" });
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       // Sign up user with Supabase Auth
       const { error } = await supabase.auth.signUp({
@@ -51,6 +59,8 @@ function Register() {
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,30 +71,29 @@ function Register() {
         <VStack spacing={4} align="stretch">
           <FormControl isRequired>
             <FormLabel>Name</FormLabel>
-            <Input name="name" value={form.name} onChange={handleChange} />
+            <Input name="name" value={form.name} onChange={handleChange} isDisabled={loading} />
           </FormControl>
           <FormControl isRequired>
             <FormLabel>Age</FormLabel>
-            <Input name="age" type="number" value={form.age} onChange={handleChange} />
+            <Input name="age" type="number" value={form.age} onChange={handleChange} isDisabled={loading} />
           </FormControl>
           <FormControl isRequired>
             <FormLabel>Email</FormLabel>
-            <Input name="email" type="email" value={form.email} onChange={handleChange} />
+            <Input name="email" type="email" value={form.email} onChange={handleChange} isDisabled={loading} />
           </FormControl>
           <FormControl isRequired>
             <FormLabel>Password</FormLabel>
-            <Input name="password" type="password" value={form.password} onChange={handleChange} />
+            <Input name="password" type="password" value={form.password} onChange={handleChange} isDisabled={loading} />
           </FormControl>
-          <Button type="submit" colorScheme="teal">
+          <Button type="submit" colorScheme="teal" isLoading={loading} isDisabled={loading}>
             Register
           </Button>
-          <Text textAlign="center">
-            Already have an account? <Link to="/login" style={{ color: "#3182ce" }}>Login</Link>
-          </Text>
         </VStack>
       </form>
     </Box>
   );
+}
+
 }
 
 export default Register;

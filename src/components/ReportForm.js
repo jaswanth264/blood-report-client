@@ -15,17 +15,23 @@ import { supabase } from "../supabaseClient";
 // ...existing code...
 function ReportForm({ user }) {
   const [report, setReport] = useState("");
+  const [loading, setLoading] = useState(false);
   const toast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      // Upsert report for the user in Supabase
+      // Upsert report for the user in Supabase (fix: remove invalid columns param, add Accept header)
       const { error } = await supabase
         .from("reports")
         .upsert([
           { user_id: user.id, report }
-        ], { onConflict: ["user_id"] });
+        ], { onConflict: ["user_id"] })
+        .select()
+        .single({
+          headers: { Accept: "application/json" }
+        });
       if (error) throw error;
       toast({
         title: "Report Submitted",
@@ -42,6 +48,8 @@ function ReportForm({ user }) {
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -56,9 +64,10 @@ function ReportForm({ user }) {
               placeholder="Paste your report here"
               value={report}
               onChange={(e) => setReport(e.target.value)}
+              isDisabled={loading}
             />
           </FormControl>
-          <Button type="submit" colorScheme="teal">
+          <Button type="submit" colorScheme="teal" isLoading={loading} isDisabled={loading}>
             Submit
           </Button>
         </VStack>
