@@ -25,10 +25,10 @@ function ReportForm({ user }) {
       // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/${Date.now()}.${fileExt}`;
-      let { error: uploadError } = await supabase.storage.from('reports').upload(filePath, file);
-      if (uploadError) throw uploadError;
+      let { error: uploadError } = await supabase.storage.from('blood-reports').upload(filePath, file);
+      if (uploadError) throw new Error(`Upload error: ${uploadError.message || uploadError}`);
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage.from('reports').getPublicUrl(filePath);
+      const { data: { publicUrl } } = supabase.storage.from('blood-reports').getPublicUrl(filePath);
       // Upsert file URL in reports table
       const { error } = await supabase
         .from("reports")
@@ -46,9 +46,9 @@ function ReportForm({ user }) {
     } catch (err) {
       toast({
         title: "Upload failed",
-        description: err.message || "Try again",
+        description: err.message || JSON.stringify(err) || "Try again",
         status: "error",
-        duration: 3000,
+        duration: 5000,
         isClosable: true,
       });
     } finally {
