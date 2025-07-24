@@ -9,17 +9,27 @@ function UserReport({ user }) {
 
   useEffect(() => {
     async function getReport() {
-      setLoading(true); setError("");
+      setLoading(true);
+      setError("");
       try {
-        const { data, error } = await supabase
-          .from("reports")
-          .select("report, name, phone, other_details")
-          .eq("user_id", user.id)
-          .single();
-        if (error) throw error;
-        setReport(data || null);
-      } catch (err) { setError("Could not load your report. Please try again later."); setReport(null); }
-      finally { setLoading(false); }
+        // Use fetch to add Accept header for Supabase REST endpoint
+        const url = `${process.env.REACT_APP_SUPABASE_URL}/rest/v1/reports?user_id=eq.${user.id}&select=report,name,phone,other_details`;
+        const response = await fetch(url, {
+          headers: {
+            'apikey': process.env.REACT_APP_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${process.env.REACT_APP_SUPABASE_ANON_KEY}`,
+            'Accept': 'application/json'
+          }
+        });
+        if (!response.ok) throw new Error('Could not load your report. Please try again later.');
+        const data = await response.json();
+        setReport(data && data[0] ? data[0] : null);
+      } catch (err) {
+        setError("Could not load your report. Please try again later.");
+        setReport(null);
+      } finally {
+        setLoading(false);
+      }
     }
     getReport();
   }, [user]);

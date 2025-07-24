@@ -25,8 +25,23 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Example admin check (replace with your admin email or role logic)
-  const isAdmin = session?.user?.email === "admin@example.com";
+  // Admin check using 'role' from profiles table
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    async function checkAdmin() {
+      if (session?.user?.id) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        setIsAdmin(data?.role === 'admin');
+      } else {
+        setIsAdmin(false);
+      }
+    }
+    checkAdmin();
+  }, [session]);
 
   if (loading) return <div>Loading...</div>;
 
