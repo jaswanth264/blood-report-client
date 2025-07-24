@@ -30,7 +30,7 @@ function App() {
   useEffect(() => {
     async function checkAdmin() {
       if (session?.user?.id) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
@@ -48,13 +48,20 @@ function App() {
   return (
     <ChakraProvider>
       <Router>
-        <Box maxW="md" mx="auto" mt={10} p={6} borderWidth="1px" borderRadius="md" boxShadow="md">
+        <Box maxW="md" mx="auto" mt={10} p={6} borderWidth="1px" borderRadius="md" boxShadow="md" position="relative" bg="gray.50">
           {session && (
-            <VStack mb={4} align="stretch">
-              <Button colorScheme="red" onClick={() => supabase.auth.signOut()}>
-                Sign Out
-              </Button>
-            </VStack>
+            <Button
+              colorScheme="red"
+              onClick={() => supabase.auth.signOut()}
+              position="absolute"
+              top={4}
+              right={4}
+              zIndex={2}
+              size="sm"
+              variant="outline"
+            >
+              Logout
+            </Button>
           )}
           <Routes>
             <Route path="/register" element={<Register />} />
