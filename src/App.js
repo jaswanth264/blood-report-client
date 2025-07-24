@@ -5,7 +5,7 @@ import Login from "./components/Login";
 import ReportForm from "./components/ReportForm";
 import UserReport from "./components/UserReport";
 import AdminDashboard from "./components/AdminDashboard";
-import { ChakraProvider, Box, Button, VStack } from "@chakra-ui/react";
+import { ChakraProvider, Box, Button } from "@chakra-ui/react";
 import { supabase } from "./supabaseClient";
 
 function App() {
